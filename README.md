@@ -20,6 +20,7 @@ This app is distributed as a Homebrew **Cask** from this repository (personal ta
 
 ```bash
 brew tap MickyBalladelli/authenticator https://github.com/MickyBalladelli/authenticator
+brew trust mickyballadelli/authenticator
 brew install --cask mac-authenticator
 ```
 

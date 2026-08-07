@@ -7,7 +7,7 @@ cask "mac-authenticator" do
   desc "Menu-bar TOTP authenticator for macOS"
   homepage "https://github.com/MickyBalladelli/authenticator"
 
-  depends_on macos: ">= :ventura"
+  depends_on macos: :ventura
 
   app "MacAuthenticator.app"
 
