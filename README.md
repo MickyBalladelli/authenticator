@@ -14,10 +14,30 @@ A lightweight, native macOS menu-bar 2FA (TOTP) authenticator built with **Swift
 
 ---
 
+## Install with Homebrew
+
+This app is distributed as a Homebrew **Cask** from this repository (personal tap):
+
+```bash
+brew tap MickyBalladelli/authenticator https://github.com/MickyBalladelli/authenticator
+brew install --cask mac-authenticator
+```
+
+Upgrade / uninstall:
+
+```bash
+brew upgrade --cask mac-authenticator
+brew uninstall --cask mac-authenticator
+```
+
+> **Note:** Builds are currently ad-hoc signed (not Apple notarized). On first launch macOS may quarantine the app — use **System Settings → Privacy & Security** to allow it, or: `xattr -dr com.apple.quarantine /Applications/MacAuthenticator.app`.
+
+---
+
 ## Open the project
 
 ```bash
-open /Users/micky/dev/authenticator/MacAuthenticator.xcodeproj
+open MacAuthenticator.xcodeproj
 ```
 
 Or open `MacAuthenticator.xcodeproj` from Finder / Xcode.
@@ -50,13 +70,15 @@ Or use **Activity Monitor** → search **MacAuthenticator** → Quit / Force Qui
 
 ## Scripts
 
-Helper scripts in the repo root (output goes to `.derivedData/`):
+Helper scripts in the repo root (build output goes to `.derivedData/`, packages to `dist/`):
 
 | Script | Purpose |
 |--------|---------|
 | [`build.sh`](build.sh) | Build the app |
 | [`test.sh`](test.sh) | Run unit tests |
 | [`run.sh`](run.sh) | Launch the app (builds first if needed) |
+| [`package.sh`](package.sh) | Release-build and zip for GitHub / Homebrew |
+| [`scripts/update-cask.sh`](scripts/update-cask.sh) | Refresh `Casks/mac-authenticator.rb` version + sha256 |
 
 ```bash
 ./build.sh          # Debug (default)
@@ -66,9 +88,30 @@ Helper scripts in the repo root (output goes to `.derivedData/`):
 
 ./run.sh            # Launch Debug build
 ./run.sh Release    # Launch Release build
+
+VERSION=1.0.0 ./package.sh
+./scripts/update-cask.sh dist/MacAuthenticator-1.0.0.zip
 ```
 
 `run.sh` opens the built `.app`. Look for the **lock.shield** icon in the menu bar (no Dock icon).
+
+### Publish a Homebrew release
+
+1. Bump `MARKETING_VERSION` in the Xcode project (already `1.0.0`).
+2. Commit, then tag and push:
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+3. GitHub Actions (`.github/workflows/release.yml`) builds a Release zip, uploads it to the GitHub Release, and attaches an updated `Casks/mac-authenticator.rb`.
+4. Copy that cask file onto your default branch (so `brew install` / `brew upgrade` see the new checksum), then push.
+
+Local dry-run without tagging:
+
+```bash
+VERSION=1.0.0 ./package.sh
+./scripts/update-cask.sh
+```
 
 ### Equivalent `xcodebuild` commands
 
@@ -124,25 +167,18 @@ MacAuthenticator/
   MacAuthenticatorApp.swift          # MenuBarExtra entry point
   Info.plist                         # LSUIElement = YES (agent / no Dock icon)
   Models/
-    Account.swift
-    OTPURIParser.swift
   Crypto/
-    Base32.swift
-    TOTPGenerator.swift
   Services/
-    KeychainManager.swift
-    AccountStore.swift
   ViewModels/
-    AccountListViewModel.swift
   Views/
-    MainListView.swift
-    AccountRowView.swift
-    AddAccountSheet.swift
-    TimerProgressView.swift
 MacAuthenticatorTests/
-  Base32Tests.swift
-  TOTPGeneratorTests.swift
-  OTPURIParserTests.swift
+Casks/
+  mac-authenticator.rb               # Homebrew Cask (personal tap)
+scripts/
+  update-cask.sh                     # Sync cask version + sha256 from dist zip
+.github/workflows/
+  release.yml                        # Tag → zip → GitHub Release
+package.sh                           # Release .app → dist/*.zip
 ```
 
 ---

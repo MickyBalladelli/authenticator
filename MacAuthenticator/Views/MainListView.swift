@@ -11,27 +11,31 @@ struct MainListView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            Divider()
-            content
-        }
-        .frame(width: 360, height: 420)
-        .overlay(alignment: .bottom) {
-            if let toast = viewModel.toastMessage {
-                Text(toast)
-                    .font(.caption.weight(.medium))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(.ultraThinMaterial, in: Capsule())
-                    .padding(.bottom, 12)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+        Group {
+            if viewModel.showAddSheet {
+                // Presented inline: MenuBarExtra + .sheet dismisses the popup on click.
+                AddAccountSheet(viewModel: viewModel)
+            } else {
+                VStack(spacing: 0) {
+                    header
+                    Divider()
+                    content
+                }
+                .overlay(alignment: .bottom) {
+                    if let toast = viewModel.toastMessage {
+                        Text(toast)
+                            .font(.caption.weight(.medium))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(.ultraThinMaterial, in: Capsule())
+                            .padding(.bottom, 12)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                }
+                .animation(.easeInOut(duration: 0.2), value: viewModel.toastMessage)
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: viewModel.toastMessage)
-        .sheet(isPresented: $viewModel.showAddSheet) {
-            AddAccountSheet(viewModel: viewModel)
-        }
+        .frame(width: 360, height: 420)
         .alert("Error", isPresented: Binding(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }

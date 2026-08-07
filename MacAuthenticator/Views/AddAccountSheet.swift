@@ -9,7 +9,6 @@ struct AddAccountSheet: View {
     }
 
     @ObservedObject var viewModel: AccountListViewModel
-    @Environment(\.dismiss) private var dismiss
 
     @State private var mode: EntryMode = .secret
     @State private var label = ""
@@ -30,68 +29,72 @@ struct AddAccountSheet: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Add Account")
-                    .font(.title2.weight(.semibold))
-                Spacer()
-                Button("Cancel") { dismiss() }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Text("Add Account")
+                        .font(.title2.weight(.semibold))
+                    Spacer()
+                    Button("Cancel") {
+                        // Avoid Environment.dismiss — in MenuBarExtra it closes the popup.
+                        viewModel.showAddSheet = false
+                    }
                     .keyboardShortcut(.cancelAction)
-            }
-
-            Picker("Entry Mode", selection: $mode) {
-                ForEach(EntryMode.allCases) { entry in
-                    Text(entry.rawValue).tag(entry)
                 }
-            }
-            .pickerStyle(.segmented)
-            .onChange(of: mode) { _ in
-                validationError = nil
-            }
 
-            if mode == .uri {
-                uriSection
-            }
-
-            formFields
-                .disabled(mode == .uri && uriStatus != .valid && !uri.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-
-            DisclosureGroup("Advanced") {
-                Picker("Digits", selection: $digits) {
-                    Text("6").tag(6)
-                    Text("8").tag(8)
-                }
-                .pickerStyle(.segmented)
-
-                Picker("Interval", selection: $period) {
-                    Text("30s").tag(30)
-                    Text("60s").tag(60)
-                    if period != 30 && period != 60 {
-                        Text("\(period)s").tag(period)
+                Picker("Entry Mode", selection: $mode) {
+                    ForEach(EntryMode.allCases) { entry in
+                        Text(entry.rawValue).tag(entry)
                     }
                 }
                 .pickerStyle(.segmented)
-                .padding(.top, 8)
-            }
-
-            if let validationError {
-                Text(validationError)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-            }
-
-            HStack {
-                Spacer()
-                Button("Add") {
-                    save()
+                .onChange(of: mode) { _ in
+                    validationError = nil
                 }
-                .keyboardShortcut(.defaultAction)
-                .buttonStyle(.borderedProminent)
-                .disabled(!canSave)
+
+                if mode == .uri {
+                    uriSection
+                }
+
+                formFields
+                    .disabled(mode == .uri && uriStatus != .valid && !uri.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                DisclosureGroup("Advanced") {
+                    Picker("Digits", selection: $digits) {
+                        Text("6").tag(6)
+                        Text("8").tag(8)
+                    }
+                    .pickerStyle(.segmented)
+
+                    Picker("Interval", selection: $period) {
+                        Text("30s").tag(30)
+                        Text("60s").tag(60)
+                        if period != 30 && period != 60 {
+                            Text("\(period)s").tag(period)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.top, 8)
+                }
+
+                if let validationError {
+                    Text(validationError)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+
+                HStack {
+                    Spacer()
+                    Button("Add") {
+                        save()
+                    }
+                    .keyboardShortcut(.defaultAction)
+                    .buttonStyle(.borderedProminent)
+                    .disabled(!canSave)
+                }
             }
+            .padding(20)
         }
-        .padding(20)
-        .frame(width: 420)
     }
 
     private var uriSection: some View {
