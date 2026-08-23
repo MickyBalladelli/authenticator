@@ -6,7 +6,10 @@ struct SettingsView: View {
 
     @AppStorage("requireAuthentication") private var requireAuthentication = false
     @AppStorage("lockTimeoutRaw") private var lockTimeoutRaw = LockTimeout.always.rawValue
-    @AppStorage(LaunchMode.storageKey) private var launchModeRaw = LaunchMode.menuBar.rawValue
+
+    // Deliberately a plain @State: writing launchModeRaw here would flip
+    // LaunchMode.current mid-run; the choice only persists on relaunch.
+    @State private var selectedModeRaw = LaunchMode.current.rawValue
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -34,7 +37,7 @@ struct SettingsView: View {
 
             Divider()
 
-            Picker(selection: $launchModeRaw) {
+            Picker(selection: $selectedModeRaw) {
                 Text("Menu Bar Only").tag(LaunchMode.menuBar.rawValue)
                 Text("Application").tag(LaunchMode.windowApp.rawValue)
             } label: {
@@ -42,11 +45,14 @@ struct SettingsView: View {
             }
             .pickerStyle(.menu)
 
-            Text("Only one form is active at a time. Takes effect on relaunch.")
+            Text("Only one form is active at a time. Pick a form, then relaunch to apply.")
                 .font(.caption)
                 .foregroundColor(.secondary)
 
-            Button("Relaunch Now") { relaunch() }
+            Button("Relaunch Now") {
+                UserDefaults.standard.set(selectedModeRaw, forKey: LaunchMode.storageKey)
+                relaunch()
+            }
 
             Spacer()
         }

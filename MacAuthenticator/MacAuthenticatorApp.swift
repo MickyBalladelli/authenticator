@@ -12,6 +12,10 @@ enum LaunchMode: Int {
     static var current: LaunchMode {
         LaunchMode(rawValue: UserDefaults.standard.integer(forKey: storageKey)) ?? .menuBar
     }
+
+    /// Snapshot taken once per process. Settings can rewrite the persisted
+    /// value while running, but the form only changes on the next launch.
+    static let launchTime = LaunchMode.current
 }
 
 extension Notification.Name {
@@ -19,12 +23,17 @@ extension Notification.Name {
     static let agentPopoverDidClose = Notification.Name("agentPopoverDidClose")
 }
 
-/// Invisible placeholder filling the WindowGroup in menu-bar mode; the window
-/// is ordered out immediately after launch.
+/// Placeholder filling the WindowGroup in menu-bar mode; it closes its own
+/// window as soon as it appears (the popover is the entire UI in this mode).
 struct AgentIdleView: View {
+    @Environment(\.dismiss) private var dismiss
+
     var body: some View {
         Color.clear
             .frame(width: 1, height: 1)
+            .onAppear {
+                dismiss()
+            }
     }
 }
 
@@ -92,16 +101,22 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
         // Accessory: no Dock icon (menu-bar agent). Regular: standard app.
-        NSApp.setActivationPolicy(LaunchMode.current == .menuBar ? .accessory : .regular)
+        NSApp.setActivationPolicy(LaunchMode.launchTime == .menuBar ? .accessory : .regular)
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        guard LaunchMode.current == .menuBar else { return }
-        // Hide the auto-created WindowGroup window; the popover is the UI.
+        guard LaunchMode.launchTime == .menuBar else { return }
+        // Belt and braces: hide the auto-created window if it already exists.
         for window in NSApp.windows where window.canBecomeMain {
             window.orderOut(nil)
         }
         StatusItemController.shared.install()
+    }
+
+    /// Menu-bar mode has no windows by design; closing the placeholder must
+    /// not terminate the app (SwiftUI's default would).
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        false
     }
 
     /// Reopens the main window when the Dock icon is clicked while none is visible.
@@ -123,7 +138,7 @@ struct MacAuthenticatorApp: App {
 
     var body: some Scene {
         WindowGroup("Authenticator", id: "main-window") {
-            if LaunchMode.current == .menuBar {
+            if LaunchMode.launchTime == .menuBar {
                 AgentIdleView()
             } else {
                 MainListView(viewModel: viewModel, isPopup: false)
