@@ -2,7 +2,7 @@
 
 A lightweight, native macOS menu-bar 2FA (TOTP) authenticator built with **SwiftUI**, **CryptoKit**, and **Keychain Services**.
 
-- Menu-bar only (no Dock icon)
+- Runs as a menu-bar agent (no Dock icon) or a regular application — pick one in Settings
 - Secrets stored in the macOS Keychain
 - Account metadata stored in Application Support
 - Add accounts via Base32 secret or `otpauth://` URI
@@ -177,22 +177,28 @@ Open the **Settings** tab in the popup (the gear menu now only holds
   - **5 minutes** / **1 hour** / **3 hours** — grace period; the choice is
     remembered across launches. Unlock state itself is never persisted: after
     quitting the app always starts locked.
+- **Run as** — how the app presents itself; only one form is ever active:
+  - **Menu Bar Only** (default) — shield icon in the menu bar, no Dock icon
+  - **Application** — Dock icon, Cmd-Tab, and a resizable window
+  The choice is remembered across launches and takes effect after relaunch;
+  press **Relaunch Now** to apply it immediately.
 - **Quit Authenticator** — exits the app
 
-### Regular app window
+### Menu bar vs application
 
-Besides the menu-bar popup, the app runs as a normal application: it has a
-Dock icon, appears in Cmd-Tab, and opens a resizable window at launch with the
-same Codes / Passkey / Settings tabs. Close it freely — reopen via the Dock
-icon or the shield popup's gear menu → **Open in Window**.
+The two forms are mutually exclusive. In **Menu Bar Only** mode there is no
+Dock icon and no regular window — the shield popover *is* the app. In
+**Application** mode the window opens at launch with the same Codes / Passkey /
+Settings tabs and no menu-bar item appears. Switch via Settings → **Run as**,
+then relaunch (or **Relaunch Now**).
 
 ### Privacy behavior
 
 - Clipboard is cleared **30 seconds** after copying a TOTP code (if it still
   contains the copied code). Copied passkey assertions are not auto-cleared.
-- Codes are obscured when the menu-bar window becomes inactive.
+- Codes are obscured when the menu-bar popup becomes inactive.
 - With authentication required and no grace period left, the app locks again
-  when the window resigns active.
+  when the popup resigns active.
 
 ---
 
@@ -224,7 +230,7 @@ the tool only prints them to stdout and does not log or store them.
 
 ```
 MacAuthenticator/
-  MacAuthenticatorApp.swift          # MenuBarExtra entry point
+  MacAuthenticatorApp.swift          # Entry point; picks menu-bar or window mode
   Info.plist                         # LSUIElement = YES (agent / no Dock icon)
   Models/
   Crypto/

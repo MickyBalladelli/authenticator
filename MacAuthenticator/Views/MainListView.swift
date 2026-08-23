@@ -15,7 +15,6 @@ struct MainListView: View {
     /// only the transient menu-bar popup hides/locks when dismissed.
     var isPopup: Bool = true
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.openWindow) private var openWindow
     @AppStorage("requireAuthentication") private var requireAuthentication = false
     @State private var selectedTab: Tab = .codes
 
@@ -115,12 +114,6 @@ struct MainListView: View {
             }
 
             Menu {
-                if isPopup {
-                    Button("Open in Window") {
-                        openWindow(id: "main-window")
-                    }
-                    Divider()
-                }
                 Button("Quit Authenticator") {
                     NSApplication.shared.terminate(nil)
                 }
