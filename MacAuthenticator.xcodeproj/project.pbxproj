@@ -27,6 +27,8 @@
 		B10000000000000000000003 /* GhostOSAssertion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000022 /* GhostOSAssertion.swift */; };
 		B10000000000000000000004 /* GhostOSAssertionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000023 /* GhostOSAssertionTests.swift */; };
 		B10000000000000000000005 /* GhostLoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000024 /* GhostLoginView.swift */; };
+		B10000000000000000000006 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000025 /* SettingsView.swift */; };
+		B10000000000000000000007 /* LockTimeoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000026 /* LockTimeoutTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -60,6 +62,8 @@
 		B20000000000000000000022 /* GhostOSAssertion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhostOSAssertion.swift; sourceTree = "<group>"; };
 		B20000000000000000000023 /* GhostOSAssertionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhostOSAssertionTests.swift; sourceTree = "<group>"; };
 		B20000000000000000000024 /* GhostLoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhostLoginView.swift; sourceTree = "<group>"; };
+		B20000000000000000000025 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		B20000000000000000000026 /* LockTimeoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockTimeoutTests.swift; sourceTree = "<group>"; };
 		A20000000000000000000011 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A20000000000000000000020 /* MacAuthenticator.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacAuthenticator.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000000000000000000021 /* MacAuthenticatorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MacAuthenticatorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -121,6 +125,7 @@
 				A2000000000000000000000E /* TOTPGeneratorTests.swift */,
 				A2000000000000000000000F /* OTPURIParserTests.swift */,
 				B20000000000000000000023 /* GhostOSAssertionTests.swift */,
+				B20000000000000000000026 /* LockTimeoutTests.swift */,
 			);
 			path = MacAuthenticatorTests;
 			sourceTree = "<group>";
@@ -187,6 +192,7 @@
 				A2000000000000000000000B /* AddAccountSheet.swift */,
 				A2000000000000000000000C /* TimerProgressView.swift */,
 				B20000000000000000000024 /* GhostLoginView.swift */,
+				B20000000000000000000025 /* SettingsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -328,6 +334,7 @@
 				A1000000000000000000000B /* AddAccountSheet.swift in Sources */,
 				A1000000000000000000000C /* TimerProgressView.swift in Sources */,
 				B10000000000000000000005 /* GhostLoginView.swift in Sources */,
+				B10000000000000000000006 /* SettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -339,6 +346,7 @@
 				A1000000000000000000000E /* TOTPGeneratorTests.swift in Sources */,
 				A1000000000000000000000F /* OTPURIParserTests.swift in Sources */,
 				B10000000000000000000004 /* GhostOSAssertionTests.swift in Sources */,
+				B10000000000000000000007 /* LockTimeoutTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

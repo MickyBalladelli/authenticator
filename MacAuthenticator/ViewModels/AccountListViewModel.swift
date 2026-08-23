@@ -4,6 +4,26 @@ import Foundation
 import LocalAuthentication
 import SwiftUI
 
+/// How long codes stay unlocked after a successful authentication before the
+/// next prompt. Raw values are persisted in UserDefaults; do not renumber.
+enum LockTimeout: Int, CaseIterable, Identifiable {
+    case always = 0
+    case fiveMinutes = 300
+    case oneHour = 3_600
+    case threeHours = 10_800
+
+    var id: Int { rawValue }
+
+    var label: String {
+        switch self {
+        case .always: return "Always"
+        case .fiveMinutes: return "5 minutes"
+        case .oneHour: return "1 hour"
+        case .threeHours: return "3 hours"
+        }
+    }
+}
+
 @MainActor
 final class AccountListViewModel: ObservableObject {
     @Published private(set) var accounts: [Account] = []
@@ -16,6 +36,21 @@ final class AccountListViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     @AppStorage("requireAuthentication") var requireAuthentication = false
+
+    /// Persisted "ask again after" choice (LockTimeout rawValue).
+    @AppStorage("lockTimeoutRaw") var lockTimeoutRaw = LockTimeout.always.rawValue
+
+    /// In-memory only: when authentication last succeeded. Never persisted.
+    private var lastUnlockDate: Date?
+
+    private var lockTimeout: LockTimeout {
+        LockTimeout(rawValue: lockTimeoutRaw) ?? .always
+    }
+
+    private var isWithinGracePeriod: Bool {
+        guard let last = lastUnlockDate, lockTimeout != .always else { return false }
+        return Date().timeIntervalSince(last) < TimeInterval(lockTimeout.rawValue)
+    }
 
     private let store: AccountStore
     private var timerCancellable: AnyCancellable?
@@ -172,6 +207,14 @@ final class AccountListViewModel: ObservableObject {
             return
         }
 
+        // Within the grace window after a successful unlock: no prompt,
+        // whether the app is still unlocked or was soft-locked meanwhile.
+        if isWithinGracePeriod {
+            isUnlocked = true
+            regenerateCodes(force: true)
+            return
+        }
+
         let context = LAContext()
         var error: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
@@ -191,6 +234,7 @@ final class AccountListViewModel: ObservableObject {
                 guard let self else { return }
                 self.isUnlocked = success
                 if success {
+                    self.lastUnlockDate = Date()
                     self.regenerateCodes(force: true)
                 }
             }
@@ -199,11 +243,15 @@ final class AccountListViewModel: ObservableObject {
 
     func unlockWithoutAuthentication() {
         isUnlocked = true
+        lastUnlockDate = nil
         regenerateCodes(force: true)
     }
 
     func lockForPrivacy() {
         guard requireAuthentication else { return }
+        // Grace window still active: keep unlocked; inactive windows are
+        // already obscured by obscureForInactiveWindow().
+        if isWithinGracePeriod && isUnlocked { return }
         isUnlocked = false
         codes = [:]
     }

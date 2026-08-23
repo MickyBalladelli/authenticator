@@ -34,7 +34,7 @@ struct GhostLoginView: View {
     }
 
     private var intro: some View {
-        Text("Paste the challenge shown after \"Challenge:\" in the GhostOS console to build the passkey assertion.")
+        Text("Paste the console's challenge (shown after \"Challenge:\") to build the passkey assertion.")
             .font(.subheadline)
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)

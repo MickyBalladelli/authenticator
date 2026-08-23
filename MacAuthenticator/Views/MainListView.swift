@@ -4,7 +4,8 @@ import SwiftUI
 struct MainListView: View {
     enum Tab: String, CaseIterable, Identifiable {
         case codes = "Codes"
-        case ghostLogin = "GhostOS Login"
+        case passkey = "Passkey"
+        case settings = "Settings"
 
         var id: String { rawValue }
     }
@@ -106,8 +107,6 @@ struct MainListView: View {
             }
 
             Menu {
-                Toggle("Require Touch ID / Password", isOn: $requireAuthentication)
-                Divider()
                 Button("Quit Authenticator") {
                     NSApplication.shared.terminate(nil)
                 }
@@ -129,8 +128,10 @@ struct MainListView: View {
             switch selectedTab {
             case .codes:
                 codesContent
-            case .ghostLogin:
+            case .passkey:
                 GhostLoginView(viewModel: viewModel)
+            case .settings:
+                SettingsView(viewModel: viewModel)
             }
         }
     }

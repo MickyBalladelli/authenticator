@@ -140,7 +140,7 @@ Unit tests cover:
 ## Usage
 
 1. Click the menu-bar icon to open the app.
-2. Switch between **Codes** (TOTP list) and **GhostOS Login** with the tabs at the top.
+2. Switch between **Codes** (TOTP list), **Passkey**, and **Settings** with the tabs at the top.
 3. Click **+** (or **Add Account**) to add a new account.
 4. Choose:
    - **Raw Secret Key** — enter issuer, account name, and Base32 secret
@@ -149,13 +149,17 @@ Unit tests cover:
 6. Click **Copy** on a row to copy the current code (toast: “Copied to clipboard!”).
 7. Delete via the trash icon or right-click context menu.
 
-### GhostOS Login tab
+### Passkey tab
 
-1. Copy the challenge shown after `Challenge:` in the GhostOS console.
+1. Copy the challenge shown after `Challenge:` in the console.
 2. Paste it into the **Challenge** field — validation runs live (spaces,
    colons, dashes and mixed case are accepted; anything else is rejected).
 3. Click **Generate Assertion**, then **Copy** and paste at the console's
    `Passkey assertion:` prompt.
+
+The generated blob is a passkey assertion in SYPA v1 wire format
+(magic `SYPA`, challenge echo, authenticator data with UP|UV flags,
+client data, and signature fields).
 
 Assertions are held only in memory (dropped when the popup loses focus),
 never logged or stored. Copied assertions stay on the clipboard until you
@@ -163,16 +167,25 @@ copy something else — TOTP codes still auto-clear after 30 seconds.
 
 ### Settings
 
-Open the gear menu in the header:
+Open the **Settings** tab in the popup (the gear menu now only holds
+**Quit Authenticator**):
 
 - **Require Touch ID / Password** — when enabled, authenticate before viewing codes
+- **Ask again after** — how long codes stay unlocked after a successful
+  authentication before the next click prompts again:
+  - **Always** (default) — authenticate on every open
+  - **5 minutes** / **1 hour** / **3 hours** — grace period; the choice is
+    remembered across launches. Unlock state itself is never persisted: after
+    quitting the app always starts locked.
 - **Quit Authenticator** — exits the app
 
 ### Privacy behavior
 
-- Clipboard is cleared **30 seconds** after copy (if it still contains the copied code).
+- Clipboard is cleared **30 seconds** after copying a TOTP code (if it still
+  contains the copied code). Copied passkey assertions are not auto-cleared.
 - Codes are obscured when the menu-bar window becomes inactive.
-- With authentication required, the app locks again when the window resigns active.
+- With authentication required and no grace period left, the app locks again
+  when the window resigns active.
 
 ---
 
