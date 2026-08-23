@@ -1,83 +1,65 @@
+import CryptoKit
 import XCTest
 @testable import MacAuthenticator
 
 final class GhostOSAssertionTests: XCTestCase {
-    /// Expected "SYPA" v1 assertion for the all-zero challenge:
-    /// magic + version/reserved + challenge + section lengths + rpIdHash +
-    /// UP|UV flags + signCount + client data + signature (85 bytes total).
-    private let allZeroExpected =
-        "5359504101000000" +
-        String(repeating: "0", count: 64) +
-        "250001000100" +
-        String(repeating: "0", count: 64) +
-        "05000000000000"
+    func testCOSEES256PublicKeyHasExpectedShape() throws {
+        let key = P256.Signing.PrivateKey()
+        let cose = try GhostOSAssertion.coseES256PublicKey(
+            fromX963Representation: key.publicKey.x963Representation
+        )
 
-    func testAllZeroChallengeVector() throws {
-        let assertion = try GhostOSAssertion.assertion(forChallengeHex: String(repeating: "0", count: 64))
-        XCTAssertEqual(assertion.count, 170)
-        XCTAssertEqual(assertion, allZeroExpected)
+        XCTAssertEqual(cose.count, 77)
+        XCTAssertEqual(Array(cose.prefix(10)), [
+            0xa5, 0x01, 0x02, 0x03, 0x26, 0x20, 0x01, 0x21, 0x58, 0x20
+        ])
+        XCTAssertEqual(Array(cose[42..<45]), [0x22, 0x58, 0x20])
     }
 
-    func testChallengeEchoedVerbatimAtOffset8() throws {
-        let challengeHex = "a1b2c3d4e5f60718293a4b5c6d7e8f90deadbeefcafe011223344556677889999"
-        let assertion = try GhostOSAssertion.assertion(forChallengeHex: challengeHex)
-        XCTAssertEqual(assertion.count, 170)
+    func testSYWBAssertionContainsValidSignatureAndWebAuthnData() throws {
+        let key = P256.Signing.PrivateKey()
+        let challenge = String(repeating: "01", count: 32)
+        let origin = URL(string: "http://localhost:43127")!
+        let packed = try GhostOSAssertion.packedAssertion(
+            challengeHex: challenge,
+            origin: origin,
+            signer: { try key.signature(for: $0).derRepresentation }
+        )
 
-        let bytes = assertion.hexToBytes()
-        XCTAssertEqual(bytes.count, GhostOSAssertion.assertionByteCount)
-        XCTAssertEqual(Array(bytes[8..<40]), Array(challengeHex.lowercased().hexToBytes()[0..<32]))
+        XCTAssertEqual(Array(packed[0..<8]), [0x53, 0x59, 0x57, 0x42, 1, 0, 0, 0])
+        let authenticatorLength = Int(packed[8]) | Int(packed[9]) << 8
+        let clientLength = Int(packed[10]) | Int(packed[11]) << 8
+        XCTAssertEqual(authenticatorLength, 37)
 
-        // Magic "SYPA" and version 0x01
-        XCTAssertEqual(Array(bytes[0..<4]), [0x53, 0x59, 0x50, 0x41])
-        XCTAssertEqual(bytes[4], 0x01)
+        let authenticatorStart = 12
+        let clientStart = authenticatorStart + authenticatorLength
+        let signatureStart = clientStart + clientLength
+        let authenticatorData = packed[authenticatorStart..<clientStart]
+        let clientData = packed[clientStart..<signatureStart]
+        let signature = try P256.Signing.ECDSASignature(derRepresentation: packed[signatureStart...])
+
+        XCTAssertEqual(authenticatorData[authenticatorData.startIndex + 32], 0x05)
+        let object = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: clientData) as? [String: Any]
+        )
+        XCTAssertEqual(object["type"] as? String, "webauthn.get")
+        XCTAssertEqual(object["origin"] as? String, origin.absoluteString)
+        XCTAssertEqual(
+            object["challenge"] as? String,
+            "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE"
+        )
+
+        var signedData = Data(authenticatorData)
+        signedData.append(Data(SHA256.hash(data: clientData)))
+        XCTAssertTrue(key.publicKey.isValidSignature(signature, for: signedData))
     }
 
-    func testFlagsByteAtOffset78() throws {
-        let assertion = try GhostOSAssertion.assertion(forChallengeHex: String(repeating: "f", count: 64))
-        let flags = assertion.hexToBytes()[46 + 32]
-        XCTAssertEqual(flags, 0x05)
-    }
-
-    func testRejectsWrongLengthAndInvalidInput() {
-        // 63 hex chars
-        XCTAssertThrowsError(try GhostOSAssertion.assertion(forChallengeHex: String(repeating: "0", count: 63)))
-        // Non-hex characters
-        XCTAssertThrowsError(try GhostOSAssertion.assertion(forChallengeHex: String(repeating: "g", count: 64)))
-        XCTAssertThrowsError(try GhostOSAssertion.assertion(forChallengeHex: "zz"))
-        // Empty input
-        XCTAssertThrowsError(try GhostOSAssertion.assertion(forChallengeHex: ""))
-    }
-
-    func testNormalizesSeparatorsAndCase() throws {
-        let lowercase = String(repeating: "0", count: 64)
-        let uppercase = lowercase.uppercased()
-        let colonSeparated = lowercase.separated(by: ":", every: 2)
-        let dashedUppercase = uppercase.separated(by: "-", every: 8)
-        let padded = "   \(dashedUppercase)\n"
-
-        for input in [uppercase, colonSeparated, dashedUppercase, padded] {
-            let assertion = try GhostOSAssertion.assertion(forChallengeHex: input)
-            XCTAssertEqual(assertion, allZeroExpected)
-        }
-    }
-}
-
-private extension String {
-    func hexToBytes() -> [UInt8] {
-        var bytes = [UInt8]()
-        bytes.reserveCapacity(count / 2)
-        var index = startIndex
-        while index < endIndex {
-            let next = self.index(after: index)
-            bytes.append(UInt8(String(self[index...next]), radix: 16)!)
-            index = self.index(after: next)
-        }
-        return bytes
-    }
-
-    func separated(by separator: String, every chunk: Int) -> String {
-        stride(from: 0, to: count, by: chunk)
-            .map { Array(String(self))[$0..<min($0 + chunk, count)] }
-            .joined(separator: separator)
+    func testRejectsInvalidChallengeAndOrigin() {
+        XCTAssertThrowsError(try GhostOSAssertion.challengeBytes(fromHex: ""))
+        XCTAssertThrowsError(try GhostOSAssertion.challengeBytes(fromHex: String(repeating: "0", count: 63)))
+        XCTAssertThrowsError(try GhostOSAssertion.challengeBytes(fromHex: String(repeating: "g", count: 64)))
+        XCTAssertFalse(GhostOSAssertion.isValid(origin: URL(string: "https://localhost:1234")!))
+        XCTAssertFalse(GhostOSAssertion.isValid(origin: URL(string: "http://example.com:1234")!))
+        XCTAssertTrue(GhostOSAssertion.isValid(origin: URL(string: "http://localhost:1234")!))
     }
 }

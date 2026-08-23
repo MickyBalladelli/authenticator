@@ -3,6 +3,7 @@
 A lightweight, native macOS menu-bar 2FA (TOTP) authenticator built with **SwiftUI**, **CryptoKit**, and **Keychain Services**.
 
 - Runs as a menu-bar agent (no Dock icon) or a regular application — pick one in Settings
+- Creates real GhostOS ES256 passkeys and authenticates through the VM's local bridge
 - Secrets stored in the macOS Keychain
 - Account metadata stored in Application Support
 - Add accounts via Base32 secret or `otpauth://` URI
@@ -77,7 +78,7 @@ Helper scripts in the repo root (build output goes to `.derivedData/`, packages 
 |--------|---------|
 | [`build.sh`](build.sh) | Build the app (falls back to CLI-only `swiftc` build when Xcode is absent) |
 | [`test.sh`](test.sh) | Run unit tests (requires full Xcode) |
-| [`scripts/verify-cli.sh`](scripts/verify-cli.sh) | Xcode-free smoke test of the `ghostos-login` CLI |
+| [`scripts/verify-cli.sh`](scripts/verify-cli.sh) | Confirms the retired legacy CLI cannot create assertions |
 | [`run.sh`](run.sh) | Launch the app (builds first if needed) |
 | [`package.sh`](package.sh) | Release-build and zip for GitHub / Homebrew |
 | [`scripts/update-cask.sh`](scripts/update-cask.sh) | Refresh `Casks/mac-authenticator.rb` version + sha256 |
@@ -133,14 +134,14 @@ Unit tests cover:
 - Base32 decoding (`JBSWY3DPEHPK3PXP` and related cases)
 - TOTP generation against **RFC 6238** SHA-1 vectors
 - `otpauth://` URI parsing (valid TOTP, HOTP rejection, invalid input)
-- `SYPA` v1 GhostOS login assertions (exact vector, challenge echo, flags, rejection cases)
+- COSE ES256 public keys and signed `SYWB` GhostOS WebAuthn assertions
 
 ---
 
 ## Usage
 
 1. Click the menu-bar icon to open the app.
-2. Switch between **Codes** (TOTP list), **Passkey**, and **Settings** with the tabs at the top.
+2. Switch between **Codes**, **GhostOS**, and **Settings** with the tabs at the top.
 3. Click **+** (or **Add Account**) to add a new account.
 4. Choose:
    - **Raw Secret Key** — enter issuer, account name, and Base32 secret
@@ -149,21 +150,19 @@ Unit tests cover:
 6. Click **Copy** on a row to copy the current code (toast: “Copied to clipboard!”).
 7. Delete via the trash icon or right-click context menu.
 
-### Passkey tab
+### GhostOS tab
 
-1. Copy the challenge shown after `Challenge:` in the console.
-2. Paste it into the **Challenge** field — validation runs live (spaces,
-   colons, dashes and mixed case are accepted; anything else is rejected).
-3. Click **Generate Assertion**, then **Copy** and paste at the console's
-   `Passkey assertion:` prompt.
+1. Start GhostOS and copy the one-time `http://localhost:<port>/?code=…` URL
+   printed by the VM.
+2. Paste the URL into the **GhostOS** tab and click **Connect**.
+3. Enter the administrator username.
+4. Choose **Create Passkey** during first setup or **Use Passkey** at login.
+5. Approve Touch ID or the macOS authentication prompt.
 
-The generated blob is a passkey assertion in SYPA v1 wire format
-(magic `SYPA`, challenge echo, authenticator data with UP|UV flags,
-client data, and signature fields).
-
-Assertions are held only in memory (dropped when the popup loses focus),
-never logged or stored. Copied assertions stay on the clipboard until you
-copy something else — TOTP codes still auto-clear after 30 seconds.
+The app creates a P-256 ES256 credential, sends only its COSE public key during
+enrollment, and sends a signed `SYWB` WebAuthn assertion during login. Private
+key material stays in the Secure Enclave when available, with a Keychain-backed
+software key fallback.
 
 ### Settings
 
@@ -195,7 +194,7 @@ then relaunch (or **Relaunch Now**).
 ### Privacy behavior
 
 - Clipboard is cleared **30 seconds** after copying a TOTP code (if it still
-  contains the copied code). Copied passkey assertions are not auto-cleared.
+  contains the copied code). GhostOS assertions never enter the clipboard.
 - Codes are obscured when the menu-bar popup becomes inactive.
 - With authentication required and no grace period left, the app locks again
   when the popup resigns active.
@@ -204,25 +203,17 @@ then relaunch (or **Relaunch Now**).
 
 ## GhostOS console login
 
-`ghostos-login` builds the passkey assertion the GhostOS local console asks for
-after `Challenge:` (mirrors the kernel's `valid_local_passkey_assertion()`):
+The old `ghostos-login` legacy `SYPA` generator is retired. Use the GhostOS tab:
 
 ```bash
 ./build.sh
-.derivedData/Build/Products/Debug/ghostos-login <challenge-hex>
 ```
 
-Without full Xcode, `./build.sh` automatically falls back to building the CLI
-alone with `swiftc` (Command Line Tools only). Run `./scripts/verify-cli.sh`
-for an Xcode-free check of the wire format.
+The app talks directly to the loopback VM bridge. Users do not copy challenges,
+COSE keys, assertions, or hexadecimal credential material.
 
-Paste the printed hex at the console's `Passkey assertion:` prompt. The input
-may contain spaces, colons, dashes, and mixed case; it must decode to exactly
-32 bytes or the command fails with a clear error.
-
-Challenges are one-shot: if the console rejects an assertion, request a **new**
-challenge — never reuse one. Assertions are credential-bearing artifacts;
-the tool only prints them to stdout and does not log or store them.
+This macOS project supports TOTP and GhostOS passkeys. It does not contain a
+TPM implementation; macOS provides Secure Enclave rather than a TPM API.
 
 ---
 

@@ -1,133 +1,125 @@
 import SwiftUI
 
 struct GhostLoginView: View {
-    private enum ChallengeStatus: Equatable {
-        case empty
-        case valid
-        case invalid(String)
-    }
-
-    @ObservedObject var viewModel: AccountListViewModel
-    @Environment(\.scenePhase) private var scenePhase
-    @State private var challengeHex = ""
-    @State private var assertionHex: String?
+    @StateObject private var login = GhostOSLoginViewModel()
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                intro
-                challengeField
-                generateButton
-                if let assertionHex {
-                    resultSection(assertionHex)
+                Label("GhostOS", systemImage: "desktopcomputer.and.arrow.down")
+                    .font(.title2.weight(.semibold))
+
+                Text(login.message)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if login.isConnected {
+                    connectedContent
+                } else {
+                    connectionContent
                 }
+
+                if !login.errorMessage.isEmpty {
+                    Label(login.errorMessage, systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: 0)
+
+                Text("The private key stays in this Mac's Secure Enclave or Keychain.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
             }
             .padding(20)
         }
-        .onChange(of: scenePhase) { phase in
-            // Drop the displayed assertion when the popup loses focus,
-            // mirroring how codes are obscured for privacy.
-            if phase != .active {
-                assertionHex = nil
-            }
-        }
     }
 
-    private var intro: some View {
-        Text("Paste the console's challenge (shown after \"Challenge:\") to build the passkey assertion.")
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
-            .fixedSize(horizontal: false, vertical: true)
-    }
-
-    private var challengeField: some View {
+    private var connectionContent: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Challenge (32 bytes, hex)")
+            Text("GhostOS connection URL")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
 
-            TextField("e.g. 1a2b3c…  spaces, colons and dashes are ignored", text: $challengeHex)
+            TextField("http://localhost:…/?code=…", text: $login.connectionURL)
                 .textFieldStyle(.roundedBorder)
-                .font(.system(.body, design: .monospaced))
-
-            switch status {
-            case .empty:
-                Text("Challenges are one-shot — request a new one if an assertion is rejected.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            case .valid:
-                Label("Valid challenge (32 bytes)", systemImage: "checkmark.circle.fill")
-                    .font(.caption)
-                    .foregroundStyle(.green)
-            case .invalid(let message):
-                Label(message, systemImage: "xmark.circle.fill")
-                    .font(.caption)
-                    .foregroundStyle(.red)
-            }
-        }
-    }
-
-    private var generateButton: some View {
-        Button("Generate Assertion") {
-            generate()
-        }
-        .buttonStyle(.borderedProminent)
-        .frame(maxWidth: .infinity)
-        .disabled(status != .valid)
-    }
-
-    private func resultSection(_ assertion: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Passkey assertion")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-
-            Text(assertion)
                 .font(.system(.caption, design: .monospaced))
-                .lineLimit(4)
-                .truncationMode(.middle)
-                .textSelection(.enabled)
-                .padding(10)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.secondary.opacity(0.08))
-                )
+                .onSubmit { login.connect() }
 
+            Button("Connect") {
+                login.connect()
+            }
+            .buttonStyle(.borderedProminent)
+            .frame(maxWidth: .infinity)
+            .disabled(login.connectionURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        }
+    }
+
+    private var connectedContent: some View {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Paste at the console's \"Passkey assertion:\" prompt.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Label(statusTitle, systemImage: statusIcon)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(statusColor)
                 Spacer()
-                Button("Copy") {
-                    viewModel.copyAssertion(assertion)
+                Button("Disconnect") {
+                    login.disconnect()
+                }
+                .buttonStyle(.link)
+            }
+
+            if login.canAuthenticate {
+                Text("Administrator username")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+
+                TextField("micky", text: $login.username)
+                    .textFieldStyle(.roundedBorder)
+                    .textContentType(.username)
+                    .disabled(login.isBusy)
+
+                Button {
+                    login.authenticate()
+                } label: {
+                    HStack {
+                        if login.isBusy {
+                            ProgressView()
+                                .controlSize(.small)
+                        }
+                        Text(login.actionTitle)
+                    }
+                    .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
+                .disabled(login.isBusy || login.username.isEmpty)
+            } else if login.mode != "success" {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
             }
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.secondary.opacity(0.08))
+        )
+    }
 
-            Text("Assertions are never logged or stored, and stay on the clipboard until you copy something else.")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+    private var statusTitle: String {
+        switch login.mode {
+        case "enroll": return "Enrollment ready"
+        case "login": return "Login ready"
+        case "success": return "GhostOS unlocked"
+        default: return "Connected"
         }
     }
 
-    private var status: ChallengeStatus {
-        let trimmed = challengeHex.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return .empty }
-        do {
-            _ = try GhostOSAssertion.challengeBytes(fromHex: trimmed)
-            return .valid
-        } catch {
-            return .invalid(error.localizedDescription)
-        }
+    private var statusIcon: String {
+        login.mode == "success" ? "checkmark.circle.fill" : "link.circle.fill"
     }
 
-    private func generate() {
-        do {
-            // Held only in memory; never logged or persisted.
-            assertionHex = try GhostOSAssertion.assertion(forChallengeHex: challengeHex)
-        } catch {
-            viewModel.errorMessage = error.localizedDescription
-        }
+    private var statusColor: Color {
+        login.mode == "success" ? .green : .accentColor
     }
 }

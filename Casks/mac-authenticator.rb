@@ -1,6 +1,6 @@
 cask "mac-authenticator" do
-  version "1.1.1"
-  sha256 "38cb17fa567195a102ef3603b39fa9003280fb10c03f8c735a637039e85cb728"
+  version "1.1.2"
+  sha256 "114b8d78a2c33712dc7137b6e99186cdac2811205a8f4bf046f4d99b005b3289"
 
   url "https://github.com/MickyBalladelli/authenticator/releases/download/v#{version}/MacAuthenticator-#{version}.zip"
   name "Mac Authenticator"

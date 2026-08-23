@@ -8,6 +8,12 @@ enum KeychainManager {
     static func saveSecret(accountID: String, secret: String) -> Bool {
         guard let data = secret.data(using: .utf8) else { return false }
 
+        return saveData(accountID: accountID, data: data)
+    }
+
+    @discardableResult
+    static func saveData(accountID: String, data: Data) -> Bool {
+
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: serviceName,
@@ -24,6 +30,11 @@ enum KeychainManager {
     }
 
     static func fetchSecret(accountID: String) -> String? {
+        guard let data = fetchData(accountID: accountID) else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    static func fetchData(accountID: String) -> Data? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: serviceName,
@@ -34,12 +45,8 @@ enum KeychainManager {
 
         var item: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &item)
-        guard status == errSecSuccess,
-              let data = item as? Data,
-              let secret = String(data: data, encoding: .utf8) else {
-            return nil
-        }
-        return secret
+        guard status == errSecSuccess else { return nil }
+        return item as? Data
     }
 
     @discardableResult
