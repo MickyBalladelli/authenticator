@@ -42,6 +42,7 @@ final class AccountListViewModel: ObservableObject {
 
     /// In-memory only: when authentication last succeeded. Never persisted.
     private var lastUnlockDate: Date?
+    private var isAuthenticating = false
 
     private var lockTimeout: LockTimeout {
         LockTimeout(rawValue: lockTimeoutRaw) ?? .always
@@ -201,6 +202,8 @@ final class AccountListViewModel: ObservableObject {
     }
 
     func authenticateIfNeeded() {
+        guard !isAuthenticating else { return }
+
         guard requireAuthentication else {
             isUnlocked = true
             regenerateCodes(force: true)
@@ -226,12 +229,14 @@ final class AccountListViewModel: ObservableObject {
 
         isUnlocked = false
         codes = [:]
+        isAuthenticating = true
         context.evaluatePolicy(
             .deviceOwnerAuthentication,
             localizedReason: "Unlock authenticator codes"
         ) { [weak self] success, _ in
             Task { @MainActor in
                 guard let self else { return }
+                self.isAuthenticating = false
                 self.isUnlocked = success
                 if success {
                     self.lastUnlockDate = Date()

@@ -11,7 +11,11 @@ struct MainListView: View {
     }
 
     @ObservedObject var viewModel: AccountListViewModel
+    /// False for the regular app window: it stays usable while unlocked and
+    /// only the transient menu-bar popup hides/locks when dismissed.
+    var isPopup: Bool = true
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.openWindow) private var openWindow
     @AppStorage("requireAuthentication") private var requireAuthentication = false
     @State private var selectedTab: Tab = .codes
 
@@ -53,7 +57,8 @@ struct MainListView: View {
                 .animation(.easeInOut(duration: 0.2), value: viewModel.toastMessage)
             }
         }
-        .frame(width: 360, height: 420)
+        .frame(width: isPopup ? 360 : nil, height: isPopup ? 420 : nil)
+        .frame(minWidth: isPopup ? nil : 400, minHeight: isPopup ? nil : 460)
         .alert("Error", isPresented: Binding(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
@@ -70,6 +75,9 @@ struct MainListView: View {
             case .active:
                 viewModel.revealIfUnlocked()
             case .inactive, .background:
+                // Only the transient popup hides/locks on dismissal; the
+                // regular window stays usable within the grace period.
+                guard isPopup else { break }
                 viewModel.obscureForInactiveWindow()
                 if requireAuthentication {
                     viewModel.lockForPrivacy()
@@ -107,6 +115,12 @@ struct MainListView: View {
             }
 
             Menu {
+                if isPopup {
+                    Button("Open in Window") {
+                        openWindow(id: "main-window")
+                    }
+                    Divider()
+                }
                 Button("Quit Authenticator") {
                     NSApplication.shared.terminate(nil)
                 }

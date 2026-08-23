@@ -179,6 +179,13 @@ Open the **Settings** tab in the popup (the gear menu now only holds
     quitting the app always starts locked.
 - **Quit Authenticator** — exits the app
 
+### Regular app window
+
+Besides the menu-bar popup, the app runs as a normal application: it has a
+Dock icon, appears in Cmd-Tab, and opens a resizable window at launch with the
+same Codes / Passkey / Settings tabs. Close it freely — reopen via the Dock
+icon or the shield popup's gear menu → **Open in Window**.
+
 ### Privacy behavior
 
 - Clipboard is cleared **30 seconds** after copying a TOTP code (if it still
