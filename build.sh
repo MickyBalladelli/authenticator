@@ -76,6 +76,13 @@ else
   rm -rf "$APP"
   mkdir -p "$APP/Contents/MacOS"
 
+  # App icon: generate into Resources (canonical) when not yet built;
+  # PNG intermediates go to tmp/ (gitignored).
+  ICON="MacAuthenticator/Resources/AppIcon.icns"
+  if [[ ! -f "$ICON" ]]; then
+    swift scripts/make_icon.swift tmp/AppIcon.iconset "$ICON"
+  fi
+
   # Resolve the Xcode build-setting placeholders in Info.plist.
   INFO="$APP/Contents/Info.plist"
   sed \
@@ -88,6 +95,9 @@ else
     -e "s/\$(MACOSX_DEPLOYMENT_TARGET)/13.0/" \
     MacAuthenticator/Info.plist > "$INFO"
   plutil -lint "$INFO" >/dev/null
+
+  mkdir -p "$APP/Contents/Resources"
+  cp "$ICON" "$APP/Contents/Resources/AppIcon.icns"
 
   swiftc "${local_opts[@]}" -target "$TARGET" \
     "${SWIFT_SOURCES[@]}" \

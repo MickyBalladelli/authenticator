@@ -12,7 +12,7 @@ xcuserdata/
 *.ipa
 *.dSYM.zip
 *.dSYM
-.tmp-verify/
+tmp/
 # Playgrounds
 timeline.xctimeline
 playground.xcworkspace
