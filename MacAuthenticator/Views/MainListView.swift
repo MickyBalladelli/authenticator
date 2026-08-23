@@ -4,7 +4,6 @@ import SwiftUI
 struct MainListView: View {
     enum Tab: String, CaseIterable, Identifiable {
         case codes = "Codes"
-        case ghostOS = "GhostOS"
         case settings = "Settings"
 
         var id: String { rawValue }
@@ -135,8 +134,6 @@ struct MainListView: View {
             switch selectedTab {
             case .codes:
                 codesContent
-            case .ghostOS:
-                GhostLoginView()
             case .settings:
                 SettingsView(viewModel: viewModel)
             }

@@ -8,7 +8,6 @@ CONFIGURATION="${1:-Debug}"
 DERIVED_DATA="${DERIVED_DATA:-$ROOT/.derivedData}"
 PRODUCTS_DIR="$DERIVED_DATA/Build/Products/$CONFIGURATION"
 APP="$PRODUCTS_DIR/MacAuthenticator.app"
-CLI="$PRODUCTS_DIR/ghostos-login"
 
 xcodebuild_available() {
   command -v xcodebuild >/dev/null 2>&1 && xcodebuild -version >/dev/null 2>&1
@@ -33,20 +32,11 @@ if xcodebuild_available; then
   echo "Building MacAuthenticator ($CONFIGURATION)..."
   xcodebuild "${XCODEBUILD_ARGS[@]}" build
 
-  echo "Building ghostos-login ($CONFIGURATION)..."
-  xcodebuild \
-    -scheme ghostos-login \
-    -configuration "$CONFIGURATION" \
-    -destination 'platform=macOS' \
-    -derivedDataPath "$DERIVED_DATA" \
-    build
-
   echo "Build succeeded: $APP"
-  echo "CLI built:       $CLI"
   echo "Run with: open \"$APP\""
 else
   echo "xcodebuild is not available (only Command Line Tools installed)."
-  echo "Falling back to a swiftc-only build of ghostos-login and MacAuthenticator.app..."
+  echo "Falling back to a swiftc-only build of MacAuthenticator.app..."
   echo "(Install full Xcode for the complete xcodebuild flow.)"
   echo ""
 
@@ -65,12 +55,6 @@ else
   fi
 
   mkdir -p "$PRODUCTS_DIR"
-
-  echo "Building ghostos-login ($CONFIGURATION)..."
-  swiftc "${local_opts[@]}" -target "$TARGET" \
-    MacAuthenticator/Crypto/GhostOSAssertion.swift \
-    ghostos-login/main.swift \
-    -o "$CLI"
 
   echo "Building MacAuthenticator.app ($CONFIGURATION)..."
   rm -rf "$APP"
@@ -106,6 +90,5 @@ else
   codesign --force -s - "$APP"
 
   echo "Build succeeded: $APP"
-  echo "CLI built:       $CLI"
   echo "Run with: open \"$APP\""
 fi
