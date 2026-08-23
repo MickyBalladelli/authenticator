@@ -2,9 +2,17 @@ import AppKit
 import SwiftUI
 
 struct MainListView: View {
+    enum Tab: String, CaseIterable, Identifiable {
+        case codes = "Codes"
+        case ghostLogin = "GhostOS Login"
+
+        var id: String { rawValue }
+    }
+
     @ObservedObject var viewModel: AccountListViewModel
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("requireAuthentication") private var requireAuthentication = false
+    @State private var selectedTab: Tab = .codes
 
     private var period: Int {
         viewModel.accounts.map(\.period).min() ?? 30
@@ -18,6 +26,15 @@ struct MainListView: View {
             } else {
                 VStack(spacing: 0) {
                     header
+                    Picker("Section", selection: $selectedTab) {
+                        ForEach(Tab.allCases) { tab in
+                            Text(tab.rawValue).tag(tab)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .padding(.horizontal, 14)
+                    .padding(.bottom, 10)
                     Divider()
                     content
                 }
@@ -77,14 +94,16 @@ struct MainListView: View {
             Text("Authenticator")
                 .font(.headline)
             Spacer()
-            TimerProgressView(remainingSeconds: viewModel.remainingSeconds, period: period)
-            Button {
-                viewModel.showAddSheet = true
-            } label: {
-                Image(systemName: "plus")
+            if selectedTab == .codes {
+                TimerProgressView(remainingSeconds: viewModel.remainingSeconds, period: period)
+                Button {
+                    viewModel.showAddSheet = true
+                } label: {
+                    Image(systemName: "plus")
+                }
+                .help("Add account")
+                .disabled(!viewModel.isUnlocked && requireAuthentication)
             }
-            .help("Add account")
-            .disabled(!viewModel.isUnlocked && requireAuthentication)
 
             Menu {
                 Toggle("Require Touch ID / Password", isOn: $requireAuthentication)
@@ -106,7 +125,19 @@ struct MainListView: View {
     private var content: some View {
         if !viewModel.isUnlocked && requireAuthentication {
             lockedState
-        } else if viewModel.accounts.isEmpty {
+        } else {
+            switch selectedTab {
+            case .codes:
+                codesContent
+            case .ghostLogin:
+                GhostLoginView(viewModel: viewModel)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var codesContent: some View {
+        if viewModel.accounts.isEmpty {
             emptyState
         } else {
             List {

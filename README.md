@@ -75,8 +75,9 @@ Helper scripts in the repo root (build output goes to `.derivedData/`, packages 
 
 | Script | Purpose |
 |--------|---------|
-| [`build.sh`](build.sh) | Build the app |
-| [`test.sh`](test.sh) | Run unit tests |
+| [`build.sh`](build.sh) | Build the app (falls back to CLI-only `swiftc` build when Xcode is absent) |
+| [`test.sh`](test.sh) | Run unit tests (requires full Xcode) |
+| [`scripts/verify-cli.sh`](scripts/verify-cli.sh) | Xcode-free smoke test of the `ghostos-login` CLI |
 | [`run.sh`](run.sh) | Launch the app (builds first if needed) |
 | [`package.sh`](package.sh) | Release-build and zip for GitHub / Homebrew |
 | [`scripts/update-cask.sh`](scripts/update-cask.sh) | Refresh `Casks/mac-authenticator.rb` version + sha256 |
@@ -132,19 +133,33 @@ Unit tests cover:
 - Base32 decoding (`JBSWY3DPEHPK3PXP` and related cases)
 - TOTP generation against **RFC 6238** SHA-1 vectors
 - `otpauth://` URI parsing (valid TOTP, HOTP rejection, invalid input)
+- `SYPA` v1 GhostOS login assertions (exact vector, challenge echo, flags, rejection cases)
 
 ---
 
 ## Usage
 
 1. Click the menu-bar icon to open the app.
-2. Click **+** (or **Add Account**) to add a new account.
-3. Choose:
+2. Switch between **Codes** (TOTP list) and **GhostOS Login** with the tabs at the top.
+3. Click **+** (or **Add Account**) to add a new account.
+4. Choose:
    - **Raw Secret Key** — enter issuer, account name, and Base32 secret
    - **Paste otpauth:// URI** — paste a standard TOTP URI; fields auto-fill when valid
-4. Optionally open **Advanced** to set digits (6/8) and interval (30s/60s).
-5. Click **Copy** on a row to copy the current code (toast: “Copied to clipboard!”).
-6. Delete via the trash icon or right-click context menu.
+5. Optionally open **Advanced** to set digits (6/8) and interval (30s/60s).
+6. Click **Copy** on a row to copy the current code (toast: “Copied to clipboard!”).
+7. Delete via the trash icon or right-click context menu.
+
+### GhostOS Login tab
+
+1. Copy the challenge shown after `Challenge:` in the GhostOS console.
+2. Paste it into the **Challenge** field — validation runs live (spaces,
+   colons, dashes and mixed case are accepted; anything else is rejected).
+3. Click **Generate Assertion**, then **Copy** and paste at the console's
+   `Passkey assertion:` prompt.
+
+Assertions are held only in memory (dropped when the popup loses focus),
+never logged or stored. Copied assertions stay on the clipboard until you
+copy something else — TOTP codes still auto-clear after 30 seconds.
 
 ### Settings
 
@@ -158,6 +173,30 @@ Open the gear menu in the header:
 - Clipboard is cleared **30 seconds** after copy (if it still contains the copied code).
 - Codes are obscured when the menu-bar window becomes inactive.
 - With authentication required, the app locks again when the window resigns active.
+
+---
+
+## GhostOS console login
+
+`ghostos-login` builds the passkey assertion the GhostOS local console asks for
+after `Challenge:` (mirrors the kernel's `valid_local_passkey_assertion()`):
+
+```bash
+./build.sh
+.derivedData/Build/Products/Debug/ghostos-login <challenge-hex>
+```
+
+Without full Xcode, `./build.sh` automatically falls back to building the CLI
+alone with `swiftc` (Command Line Tools only). Run `./scripts/verify-cli.sh`
+for an Xcode-free check of the wire format.
+
+Paste the printed hex at the console's `Passkey assertion:` prompt. The input
+may contain spaces, colons, dashes, and mixed case; it must decode to exactly
+32 bytes or the command fails with a clear error.
+
+Challenges are one-shot: if the console rejects an assertion, request a **new**
+challenge — never reuse one. Assertions are credential-bearing artifacts;
+the tool only prints them to stdout and does not log or store them.
 
 ---
 

@@ -137,13 +137,26 @@ final class AccountListViewModel: ObservableObject {
     func copyCode(for account: Account) {
         let raw = code(for: account)
         guard !raw.contains("•") else { return }
+        copyToClipboard(raw, clearsAfterDelay: true)
+    }
 
+    /// Copies a generated GhostOS assertion. Credential-bearing artifacts are
+    /// never logged or stored. The clipboard is deliberately NOT auto-cleared:
+    /// wiping it while the user is switching to the console yields empty
+    /// submissions and burns the one-shot challenge.
+    func copyAssertion(_ hex: String) {
+        copyToClipboard(hex, clearsAfterDelay: false)
+    }
+
+    private func copyToClipboard(_ value: String, clearsAfterDelay: Bool) {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        pasteboard.setString(raw, forType: .string)
-        lastCopiedCode = raw
+        pasteboard.setString(value, forType: .string)
         showToast("Copied to clipboard!")
 
+        guard clearsAfterDelay else { return }
+
+        lastCopiedCode = value
         clipboardClearWorkItem?.cancel()
         let workItem = DispatchWorkItem { [weak self] in
             self?.clearClipboardIfNeeded()

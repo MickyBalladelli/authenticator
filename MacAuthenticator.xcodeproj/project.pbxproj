@@ -22,6 +22,11 @@
 		A1000000000000000000000D /* Base32Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000D /* Base32Tests.swift */; };
 		A1000000000000000000000E /* TOTPGeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000E /* TOTPGeneratorTests.swift */; };
 		A1000000000000000000000F /* OTPURIParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000F /* OTPURIParserTests.swift */; };
+		B10000000000000000000001 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000021 /* main.swift */; };
+		B10000000000000000000002 /* GhostOSAssertion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000022 /* GhostOSAssertion.swift */; };
+		B10000000000000000000003 /* GhostOSAssertion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000022 /* GhostOSAssertion.swift */; };
+		B10000000000000000000004 /* GhostOSAssertionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000023 /* GhostOSAssertionTests.swift */; };
+		B10000000000000000000005 /* GhostLoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000024 /* GhostLoginView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -50,6 +55,11 @@
 		A2000000000000000000000D /* Base32Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Base32Tests.swift; sourceTree = "<group>"; };
 		A2000000000000000000000E /* TOTPGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TOTPGeneratorTests.swift; sourceTree = "<group>"; };
 		A2000000000000000000000F /* OTPURIParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPURIParserTests.swift; sourceTree = "<group>"; };
+		B20000000000000000000020 /* ghostos-login */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ghostos-login; sourceTree = BUILT_PRODUCTS_DIR; };
+		B20000000000000000000021 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		B20000000000000000000022 /* GhostOSAssertion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhostOSAssertion.swift; sourceTree = "<group>"; };
+		B20000000000000000000023 /* GhostOSAssertionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhostOSAssertionTests.swift; sourceTree = "<group>"; };
+		B20000000000000000000024 /* GhostLoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhostLoginView.swift; sourceTree = "<group>"; };
 		A20000000000000000000011 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A20000000000000000000020 /* MacAuthenticator.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacAuthenticator.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000000000000000000021 /* MacAuthenticatorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MacAuthenticatorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -70,6 +80,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B60000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -78,6 +95,7 @@
 			children = (
 				A70000000000000000000002 /* MacAuthenticator */,
 				A70000000000000000000003 /* MacAuthenticatorTests */,
+				B70000000000000000000005 /* ghostos-login */,
 				A70000000000000000000004 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -102,6 +120,7 @@
 				A2000000000000000000000D /* Base32Tests.swift */,
 				A2000000000000000000000E /* TOTPGeneratorTests.swift */,
 				A2000000000000000000000F /* OTPURIParserTests.swift */,
+				B20000000000000000000023 /* GhostOSAssertionTests.swift */,
 			);
 			path = MacAuthenticatorTests;
 			sourceTree = "<group>";
@@ -111,8 +130,17 @@
 			children = (
 				A20000000000000000000020 /* MacAuthenticator.app */,
 				A20000000000000000000021 /* MacAuthenticatorTests.xctest */,
+				B20000000000000000000020 /* ghostos-login */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		B70000000000000000000005 /* ghostos-login */ = {
+			isa = PBXGroup;
+			children = (
+				B20000000000000000000021 /* main.swift */,
+			);
+			path = ghostos-login;
 			sourceTree = "<group>";
 		};
 		A70000000000000000000005 /* Models */ = {
@@ -129,6 +157,7 @@
 			children = (
 				A20000000000000000000004 /* Base32.swift */,
 				A20000000000000000000005 /* TOTPGenerator.swift */,
+				B20000000000000000000022 /* GhostOSAssertion.swift */,
 			);
 			path = Crypto;
 			sourceTree = "<group>";
@@ -157,6 +186,7 @@
 				A2000000000000000000000A /* AccountRowView.swift */,
 				A2000000000000000000000B /* AddAccountSheet.swift */,
 				A2000000000000000000000C /* TimerProgressView.swift */,
+				B20000000000000000000024 /* GhostLoginView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -199,6 +229,23 @@
 			productReference = A20000000000000000000021 /* MacAuthenticatorTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		B50000000000000000000001 /* ghostos-login */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B80000000000000000000009 /* Build configuration list for PBXNativeTarget "ghostos-login" */;
+			buildPhases = (
+				B90000000000000000000001 /* Sources */,
+				B60000000000000000000001 /* Frameworks */,
+				BB0000000000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "ghostos-login";
+			productName = "ghostos-login";
+			productReference = B20000000000000000000020 /* ghostos-login */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -233,6 +280,7 @@
 			targets = (
 				A50000000000000000000001 /* MacAuthenticator */,
 				A50000000000000000000002 /* MacAuthenticatorTests */,
+				B50000000000000000000001 /* ghostos-login */,
 			);
 		};
 /* End PBXProject section */
@@ -252,6 +300,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BB0000000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -264,6 +319,7 @@
 				A10000000000000000000003 /* OTPURIParser.swift in Sources */,
 				A10000000000000000000004 /* Base32.swift in Sources */,
 				A10000000000000000000005 /* TOTPGenerator.swift in Sources */,
+				B10000000000000000000002 /* GhostOSAssertion.swift in Sources */,
 				A10000000000000000000006 /* KeychainManager.swift in Sources */,
 				A10000000000000000000007 /* AccountStore.swift in Sources */,
 				A10000000000000000000008 /* AccountListViewModel.swift in Sources */,
@@ -271,6 +327,7 @@
 				A1000000000000000000000A /* AccountRowView.swift in Sources */,
 				A1000000000000000000000B /* AddAccountSheet.swift in Sources */,
 				A1000000000000000000000C /* TimerProgressView.swift in Sources */,
+				B10000000000000000000005 /* GhostLoginView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -281,6 +338,16 @@
 				A1000000000000000000000D /* Base32Tests.swift in Sources */,
 				A1000000000000000000000E /* TOTPGeneratorTests.swift in Sources */,
 				A1000000000000000000000F /* OTPURIParserTests.swift in Sources */,
+				B10000000000000000000004 /* GhostOSAssertionTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B90000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B10000000000000000000001 /* main.swift in Sources */,
+				B10000000000000000000003 /* GhostOSAssertion.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -408,6 +475,43 @@
 			};
 			name = Release;
 		};
+		B80000000000000000000007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		B80000000000000000000008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -434,6 +538,15 @@
 			buildConfigurations = (
 				A80000000000000000000009 /* Debug */,
 				A8000000000000000000000A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B80000000000000000000009 /* Build configuration list for PBXNativeTarget "ghostos-login" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B80000000000000000000007 /* Debug */,
+				B80000000000000000000008 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
